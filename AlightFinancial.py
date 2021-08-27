@@ -4,6 +4,81 @@ import json
 from time import sleep
 
 class AFCustomChrome(CustomChrome):
+    def __init__(self, incognito, path_to_chrome=None, headless=False, disable_gpu=False, window_size=False) -> None:
+        super().__init__(incognito=incognito, path_to_chrome=path_to_chrome, headless=headless, disable_gpu=disable_gpu, window_size=window_size)
+        self.logging_in()
+
+    def logging_in(self):
+        self.browser.get('https://alightfs.netxinvestor.com/nxi/login')
+        self.wait_until_id_element_object_found('dijit_form_ValidationTextBox_1')
+        self.browser.find_element_by_id('dijit_form_ValidationTextBox_1').send_keys(af_account['username'])
+        self.browser.find_element_by_id('dijit_form_ValidationTextBox_2').send_keys(af_account['password'])
+        self.browser.find_element_by_id('dijit_form_Button_0_label').click()
+        self.wait_until_class_name_element_object_found('secQuestion')
+        if self.is_present(self.browser.find_element_by_class_name('secQuestion')):
+            sec_question = self.browser.find_element_by_class_name('secQuestion').text
+            sec_answer = af_account['security_?'][sec_question]
+            self.browser.find_element_by_id('dijit_form_ValidationTextBox_3').send_keys(sec_answer)
+            self.browser.find_element_by_css_selector('.dijitRadio').click()
+            self.browser.find_element_by_id('dijit_form_Button_2_label').click()
+        
+        sleep(5)
+        if len(self.browser.find_elements_by_class_name('mat-button-wrapper')):
+            self.browser.find_element_by_class_name('mat-button-wrapper').click()
+
+        sleep(5)
+        self.wait_until_id_element_object_found('assetsLabel')
+        self.browser.find_element_by_id('nav-holdings').click()
+
+    def get_portfolio(self):
+        sleep(5)
+        self.wait_until_class_name_element_object_found('ui-state-default')
+        sleep(5)
+        positions = self.browser.find_elements_by_class_name('ui-state-default')
+        
+        position_table = {}
+        for ind_p, each_p in enumerate(positions[:-1]):
+            ticker_symbol = each_p.find_element_by_css_selector('a').text
+            each_p.find_element_by_class_name('expander').click()
+            sleep(2)
+            quantity_of_shares = self.browser.find_element_by_class_name('netxinvestor-keyvalues-portlet').find_element_by_css_selector('tbody tr td:nth-child(2)').text
+            # Click on the 2 year mark
+            sleep(5)
+            if ind_p != 1:
+                self.browser.find_elements_by_css_selector('#section1 a')[-1].click()
+            sleep(2)
+            self.browser.find_element_by_css_selector('g.highcharts-markers.highcharts-series-3.highcharts-tracker').click()
+            sleep(2)
+            while self.is_present(self.browser.find_element_by_id('prev1')):
+                self.browser.find_element_by_id('prev1').click()
+                sleep(1)
+            transaction_list = []
+            while self.is_present(self.browser.find_element_by_id('next1')):
+                trans_history = self.browser.find_element_by_class_name('transactionHistoryChartDetail')
+                trans_date = trans_history.find_element_by_class_name('buySellDate').text
+                raw_trans = trans_history.find_element_by_class_name('transactionsChart').text.split('\n')
+                shares = float(raw_trans[1])
+                price = float(raw_trans[3])
+                transaction_list.append((trans_date, shares, price))
+                self.browser.find_element_by_id('next1').click()
+                sleep(1)
+            trans_history = self.browser.find_element_by_class_name('transactionHistoryChartDetail')
+            trans_date = trans_history.find_element_by_class_name('buySellDate').text
+            raw_trans = trans_history.find_element_by_class_name('transactionsChart').text.split('\n')
+            shares = float(raw_trans[1])
+            price = float(raw_trans[3])
+            transaction_list.append((trans_date, shares, price))
+
+            each_p.find_element_by_class_name('expander').click()
+            position_table[ticker_symbol] = transaction_list
+            numerator = list(map(lambda x: x[1]*x[2], transaction_list))
+            denominator = list(map(lambda x: x[1], transaction_list))
+            num_of_shares = sum(denominator)
+            print(f"{sum(numerator)/num_of_shares} per share")
+            print(f"{num_of_shares} shares")
+            print(transaction_list)
+        print(position_table)
+
     def __exit__(self, exec_type, exec_value, traceback):
         if self.is_present(self.browser.find_element_by_class_name('fw-Header_Logout')):
             self.browser.find_element_by_class_name('fw-Header_Logout').click()
@@ -18,62 +93,4 @@ if __name__ == '__main__':
     af_account = confid_json['alight_financial']
 
     with AFCustomChrome(incognito=False) as alight_financial:
-        alight_financial.browser.get('https://alightfs.netxinvestor.com/nxi/login')
-        alight_financial.wait_until_id_element_object_found('dijit_form_ValidationTextBox_1')
-        alight_financial.browser.find_element_by_id('dijit_form_ValidationTextBox_1').send_keys(af_account['username'])
-        alight_financial.browser.find_element_by_id('dijit_form_ValidationTextBox_2').send_keys(af_account['password'])
-        alight_financial.browser.find_element_by_id('dijit_form_Button_0_label').click()
-        alight_financial.wait_until_class_name_element_object_found('secQuestion')
-        if alight_financial.is_present(alight_financial.browser.find_element_by_class_name('secQuestion')):
-            sec_question = alight_financial.browser.find_element_by_class_name('secQuestion').text
-            sec_answer = af_account['security_?'][sec_question]
-            alight_financial.browser.find_element_by_id('dijit_form_ValidationTextBox_3').send_keys(sec_answer)
-            alight_financial.browser.find_element_by_css_selector('.dijitRadio').click()
-            alight_financial.browser.find_element_by_id('dijit_form_Button_2_label').click()
-        
-        sleep(5)
-        if len(alight_financial.browser.find_elements_by_class_name('mat-button-wrapper')):
-            alight_financial.browser.find_element_by_class_name('mat-button-wrapper').click()
-
-        sleep(5)
-        alight_financial.wait_until_id_element_object_found('assetsLabel')
-        alight_financial.browser.find_element_by_id('nav-holdings').click()
-        
-        sleep(5)
-        alight_financial.wait_until_class_name_element_object_found('ui-state-default')
-        sleep(5)
-        positions = alight_financial.browser.find_elements_by_class_name('ui-state-default')
-
-        position_table = {}
-        for ind_p, each_p in enumerate(positions[:-1]):
-            ticker_symbol = each_p.find_element_by_css_selector('a').text
-            each_p.find_element_by_class_name('expander').click()
-            sleep(2)
-            quantity_of_shares = alight_financial.browser.find_element_by_class_name('netxinvestor-keyvalues-portlet').find_element_by_css_selector('tbody tr td:nth-child(2)').text
-            # Click on the 2 year mark
-            sleep(5)
-            if ind_p != 1:
-                alight_financial.browser.find_elements_by_css_selector('#section1 a')[-1].click()
-            sleep(2)
-            alight_financial.browser.find_element_by_css_selector('g.highcharts-markers.highcharts-series-3.highcharts-tracker').click()
-            sleep(2)
-            while alight_financial.is_present(alight_financial.browser.find_element_by_id('prev1')):
-                alight_financial.browser.find_element_by_id('prev1').click()
-                sleep(1)
-            transaction_list = []
-            while alight_financial.is_present(alight_financial.browser.find_element_by_id('next1')):
-                trans_history = alight_financial.browser.find_element_by_class_name('transactionHistoryChartDetail')
-                trans_date = trans_history.find_element_by_class_name('buySellDate').text
-                raw_trans = trans_history.find_element_by_class_name('transactionsChart').text.split('\n')
-                shares = float(raw_trans[1])
-                price = float(raw_trans[3])
-                transaction_list.append((trans_date, shares, price))
-                alight_financial.browser.find_element_by_id('next1').click()
-                sleep(1)
-            each_p.find_element_by_class_name('expander').click()
-            position_table[ticker_symbol] = transaction_list
-            numerator = list(map(lambda x: x[1]*x[2], transaction_list))
-            denominator = list(map(lambda x: x[1], transaction_list))
-            print(sum(numerator)/sum(denominator))
-            print(transaction_list)
-        print(position_table)
+        input()
