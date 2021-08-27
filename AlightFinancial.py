@@ -20,7 +20,7 @@ class AFCustomChrome(CustomChrome):
             sec_question = self.browser.find_element_by_class_name('secQuestion').text
             sec_answer = af_account['security_?'][sec_question]
             self.browser.find_element_by_id('dijit_form_ValidationTextBox_3').send_keys(sec_answer)
-            self.browser.find_element_by_css_selector('.dijitRadio').click()
+            self.browser.find_element_by_id('dijit_form_RadioButton_1').click()
             self.browser.find_element_by_id('dijit_form_Button_2_label').click()
         
         sleep(5)
@@ -38,11 +38,12 @@ class AFCustomChrome(CustomChrome):
         position_table = {}
         for ind_p, each_p in enumerate(positions[:-1]):
             self.wait_until_css_element_object_found('[role="gridcell"] a', 60)
-            sleep(15)
+            sleep(30)
             ticker_symbol = each_p.find_element_by_css_selector('[role="gridcell"] a').text
             self.wait_until_class_name_element_object_found('expander', 60)
             each_p.find_element_by_class_name('expander').click()
             self.wait_until_class_name_element_object_found('netxinvestor-keyvalues-portlet', 60)
+            sleep(5)
             quantity_of_shares = self.browser.find_element_by_class_name('netxinvestor-keyvalues-portlet').find_element_by_css_selector('tbody tr td:nth-child(2)').text
             # Click on the 2 year mark
             stock_number = ind_p + 1
@@ -52,10 +53,9 @@ class AFCustomChrome(CustomChrome):
             sleep(15)
             self.browser.find_element_by_css_selector('g.highcharts-markers.highcharts-series-3.highcharts-tracker').click()
             sleep(2)
-            while len(self.browser.find_elements_by_id(f'prev{stock_number}')) > 0:
-                sleep(15)
+            while len(self.browser.find_elements_by_css_selector(f'#prev{stock_number}.dijitDisplayNone')) == 0:
                 self.browser.find_element_by_id(f'prev{stock_number}').click()
-                sleep(15)
+                sleep(3)
             self.wait_until_id_element_object_found(f'next{stock_number}')
             transaction_list = []
 
@@ -101,5 +101,5 @@ if __name__ == '__main__':
         confid_json = json.loads(confidential.read())
     af_account = confid_json['alight_financial']
 
-    with AFCustomChrome(incognito=False, disable_extensions=False) as alight_financial:
+    with AFCustomChrome(incognito=False, disable_extensions=True) as alight_financial:
         alight_financial.get_portfolio()
