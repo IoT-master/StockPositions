@@ -130,4 +130,5 @@ dmypy.json
 .vscode/
 ChromeDrivers/*
 FirefoxDrivers/Windows/*
+Confidential/*
 !.gitkeep
