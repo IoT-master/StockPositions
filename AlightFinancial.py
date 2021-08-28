@@ -11,6 +11,11 @@ class AFCustomChrome(CustomChrome):
 
     def logging_in(self):
         self.browser.get('https://alightfs.netxinvestor.com/nxi/login')
+
+        sleep(5)
+        if self.browser.find_elements_by_id('onetrust-accept-btn-handler'):
+            self.browser.find_element_by_id('onetrust-accept-btn-handler').click()
+
         self.wait_until_id_element_object_found('dijit_form_ValidationTextBox_1')
         self.browser.find_element_by_id('dijit_form_ValidationTextBox_1').send_keys(af_account['username'])
         self.browser.find_element_by_id('dijit_form_ValidationTextBox_2').send_keys(af_account['password'])
@@ -31,6 +36,14 @@ class AFCustomChrome(CustomChrome):
         self.wait_until_id_element_object_found('assetsLabel', 20)
         self.browser.find_element_by_id('nav-holdings').click()
 
+    def _get_transaction(self, stock_number):
+            trans_history = self.browser.find_element_by_css_selector(f'#div{stock_number}')
+            trans_date = trans_history.find_element_by_class_name('buySellDate').text
+            raw_trans = trans_history.text.split('\n')
+            shares = float(raw_trans[3])
+            price = float(raw_trans[5])
+            return (trans_date, shares, price)
+
     def get_portfolio(self):
         self.wait_until_class_name_element_object_found('ui-state-default', 20)
         positions = self.browser.find_elements_by_class_name('ui-state-default')
@@ -38,45 +51,35 @@ class AFCustomChrome(CustomChrome):
         position_table = {}
         for ind_p, each_p in enumerate(positions[:-1]):
             self.wait_until_css_element_object_found('[role="gridcell"] a', 60)
-            sleep(30)
+            sleep(5)
             ticker_symbol = each_p.find_element_by_css_selector('[role="gridcell"] a').text
             self.wait_until_class_name_element_object_found('expander', 60)
             each_p.find_element_by_class_name('expander').click()
-            self.wait_until_class_name_element_object_found('netxinvestor-keyvalues-portlet', 60)
             sleep(5)
-            quantity_of_shares = self.browser.find_element_by_class_name('netxinvestor-keyvalues-portlet').find_element_by_css_selector('tbody tr td:nth-child(2)').text
+            quantity_of_shares = each_p.find_element_by_class_name('netxinvestor-keyvalues-portlet').find_element_by_css_selector('tbody tr td:nth-child(2)').text
             # Click on the 2 year mark
             stock_number = ind_p + 1
             sleep(3)
             self.wait_until_css_element_object_found(f'#section{stock_number}', 15)
             self.browser.find_elements_by_css_selector(f'#section{stock_number} .clickdetails')[9].click()
-            sleep(15)
-            self.browser.find_element_by_css_selector('g.highcharts-markers.highcharts-series-3.highcharts-tracker').click()
+            sleep(3)
+            each_p.find_element_by_css_selector('g.highcharts-markers.highcharts-series-3.highcharts-tracker').click()
             sleep(2)
             while len(self.browser.find_elements_by_css_selector(f'#prev{stock_number}.dijitDisplayNone')) == 0:
                 self.browser.find_element_by_id(f'prev{stock_number}').click()
-                sleep(3)
+                sleep(1)
             self.wait_until_id_element_object_found(f'next{stock_number}')
             transaction_list = []
 
-            trans_history = self.browser.find_element_by_class_name('transactionHistoryChartDetail')
-            trans_date = trans_history.find_element_by_class_name('buySellDate').text
-            raw_trans = trans_history.find_element_by_class_name('transactionsChart').text.split('\n')
-            shares = float(raw_trans[1])
-            price = float(raw_trans[3])
-            transaction_list.append((trans_date, shares, price))
+            transaction_list.append(self._get_transaction(stock_number))
 
             while len(self.browser.find_elements_by_css_selector(f'#next{stock_number}.dijitDisplayNone')) == 0:
                 self.wait_until_id_element_object_found(f'next{stock_number}')
                 self.browser.find_element_by_id(f'next{stock_number}').click()
         
-                trans_history = self.browser.find_element_by_class_name('transactionHistoryChartDetail')
-                trans_date = trans_history.find_element_by_class_name('buySellDate').text
-                raw_trans = trans_history.find_element_by_class_name('transactionsChart').text.split('\n')
-                shares = float(raw_trans[1])
-                price = float(raw_trans[3])
-                transaction_list.append((trans_date, shares, price))
-                sleep(10)
+                transaction_list.append(self._get_transaction(stock_number))
+                
+                sleep(1)
 
             each_p.find_element_by_class_name('expander').click()
             position_table[ticker_symbol] = transaction_list
@@ -101,5 +104,5 @@ if __name__ == '__main__':
         confid_json = json.loads(confidential.read())
     af_account = confid_json['alight_financial']
 
-    with AFCustomChrome(incognito=False, disable_extensions=True) as alight_financial:
+    with AFCustomChrome(incognito=True, disable_extensions=True) as alight_financial:
         alight_financial.get_portfolio()
