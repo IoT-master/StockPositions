@@ -5,9 +5,11 @@ import json
 from time import sleep
 
 class AFCustomChrome(CustomChrome):
-    def __init__(self, incognito, path_to_chrome=None, headless=False, disable_gpu=False, window_size=False, disable_extensions=False) -> None:
+    def __init__(self, af_account, incognito=False, path_to_chrome=None, headless=False, disable_gpu=False, window_size=False, disable_extensions=False) -> None:
         super().__init__(incognito=incognito, path_to_chrome=path_to_chrome, headless=headless, disable_gpu=disable_gpu, window_size=window_size, disable_extensions=disable_extensions)
+        self.af_account = af_account
         self.logging_in()
+        
 
     def logging_in(self):
         self.browser.get('https://alightfs.netxinvestor.com/nxi/login')
@@ -17,13 +19,13 @@ class AFCustomChrome(CustomChrome):
             self.browser.find_element_by_id('onetrust-accept-btn-handler').click()
 
         self.wait_until_id_element_object_found('dijit_form_ValidationTextBox_1')
-        self.browser.find_element_by_id('dijit_form_ValidationTextBox_1').send_keys(af_account['username'])
-        self.browser.find_element_by_id('dijit_form_ValidationTextBox_2').send_keys(af_account['password'])
+        self.browser.find_element_by_id('dijit_form_ValidationTextBox_1').send_keys(self.af_account['username'])
+        self.browser.find_element_by_id('dijit_form_ValidationTextBox_2').send_keys(self.af_account['password'])
         self.browser.find_element_by_id('dijit_form_Button_0_label').click()
         self.wait_until_class_name_element_object_found('secQuestion')
         if self.is_present(self.browser.find_element_by_class_name('secQuestion')):
             sec_question = self.browser.find_element_by_class_name('secQuestion').text
-            sec_answer = af_account['security_?'][sec_question]
+            sec_answer = self.af_account['security_?'][sec_question]
             self.browser.find_element_by_id('dijit_form_ValidationTextBox_3').send_keys(sec_answer)
             self.browser.find_element_by_id('dijit_form_RadioButton_1').click()
             self.browser.find_element_by_id('dijit_form_Button_2_label').click()
@@ -78,7 +80,7 @@ class AFCustomChrome(CustomChrome):
                 self.browser.find_element_by_id(f'next{stock_number}').click()
         
                 transaction_list.append(self._get_transaction(stock_number))
-                
+
                 sleep(1)
 
             each_p.find_element_by_class_name('expander').click()
@@ -86,6 +88,7 @@ class AFCustomChrome(CustomChrome):
             numerator = list(map(lambda x: x[1]*x[2], transaction_list))
             denominator = list(map(lambda x: x[1], transaction_list))
             num_of_shares = sum(denominator)
+            print(ticker_symbol)
             print(f"{sum(numerator)/num_of_shares} per share")
             print(f"{num_of_shares} shares")
             print(transaction_list)
@@ -104,5 +107,5 @@ if __name__ == '__main__':
         confid_json = json.loads(confidential.read())
     af_account = confid_json['alight_financial']
 
-    with AFCustomChrome(incognito=True, disable_extensions=True) as alight_financial:
+    with AFCustomChrome(af_account, incognito=True, disable_extensions=True) as alight_financial:
         alight_financial.get_portfolio()
