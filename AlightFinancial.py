@@ -39,6 +39,24 @@ class AFCustomChrome(CustomChrome):
         self.wait_until_id_element_object_found(self.browser, 'assetsLabel', 20)
         self.browser.find_element_by_id('nav-holdings').click()
 
+    def update_investment_values(self, interval=10):
+        account_view = {
+            'All Account Value': 0,
+            'All Account Change': 0,
+            'All Account Percentage:': 0
+        }
+        sleep(5)
+        while True:
+            self.wait_until_css_element_object_found(self.browser, '#EQUITY .summaryValue')
+            account_view['All Account Value'] = self.browser.find_element_by_css_selector('#EQUITY .summaryValue').text
+            self.wait_until_css_element_object_found(self.browser, '#EQUITY .mvChangeVal')
+            account_view['All Account Change'] = self.browser.find_element_by_css_selector('#EQUITY .mvChangeVal').text.strip()
+            self.wait_until_css_element_object_found(self.browser, '#EQUITY .mvChangePercent')
+            account_view['All Account Percentage:'] = self.browser.find_element_by_css_selector('#EQUITY .mvChangePercent').text.strip()
+            pprint(account_view)
+            self.browser.find_element_by_id('nav-holdings').click()
+            sleep(interval)
+
     def _get_transaction(self, stock_number):
             trans_history = self.browser.find_element_by_css_selector(f'#div{stock_number}')
             trans_date = trans_history.find_element_by_class_name('buySellDate').text
@@ -98,7 +116,7 @@ class AFCustomChrome(CustomChrome):
         self.wait_for_possible_element(self.browser, (By.CLASS_NAME, 'fw-Header_Logout'))
         if self.is_present(self.browser.find_elements_by_class_name('fw-Header_Logout')):
             self.browser.find_element_by_class_name('fw-Header_Logout').click()
-            self.wait_until_class_name_element_object_found(self.browser, 'alert-success')
+            sleep(5)
         print('Closing browser instance')
         self.browser.quit()
 
@@ -108,5 +126,5 @@ if __name__ == '__main__':
         confid_json = json.loads(confidential.read())
     af_account = confid_json['alight_financial']
 
-    with AFCustomChrome(af_account, incognito=True, disable_extensions=True) as alight_financial:
-        alight_financial.get_portfolio()
+    with AFCustomChrome(af_account, incognito=True, disable_extensions=True, headless=True) as alight_financial:
+        alight_financial.update_investment_values()
