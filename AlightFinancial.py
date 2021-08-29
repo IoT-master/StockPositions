@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 from time import sleep
 from selenium.webdriver.common.by import By
+from pprint import pprint
 
 class AFCustomChrome(CustomChrome):
     def __init__(self, af_account, incognito=False, path_to_chrome=None, headless=False, disable_gpu=False, window_size=False, disable_extensions=False) -> None:
@@ -42,9 +43,10 @@ class AFCustomChrome(CustomChrome):
             trans_history = self.browser.find_element_by_css_selector(f'#div{stock_number}')
             trans_date = trans_history.find_element_by_class_name('buySellDate').text
             raw_trans = trans_history.text.split('\n')
+            trans_type = raw_trans[0]
             shares = float(raw_trans[3])
             price = float(raw_trans[5])
-            return (trans_date, shares, price)
+            return (trans_type, trans_date, shares, price)
 
     def get_portfolio(self):
         self.wait_until_class_name_element_object_found(self.browser, 'ui-state-default', 20)
@@ -83,14 +85,14 @@ class AFCustomChrome(CustomChrome):
             self.wait_until_class_name_element_object_found(each_p, 'expander')
             each_p.find_element_by_class_name('expander').click()
             position_table[ticker_symbol] = transaction_list
-            numerator = list(map(lambda x: x[1]*x[2], transaction_list))
-            denominator = list(map(lambda x: x[1], transaction_list))
+            numerator = list(map(lambda x: x[2]*x[3], transaction_list))
+            denominator = list(map(lambda x: x[2], transaction_list))
             num_of_shares = sum(denominator)
             print(ticker_symbol)
             print(f"{sum(numerator)/num_of_shares} per share")
             print(f"{num_of_shares} shares")
-            print(transaction_list)
-        print(position_table)
+            pprint(transaction_list)
+        pprint(position_table)
 
     def __exit__(self, exec_type, exec_value, traceback):
         self.wait_for_possible_element(self.browser, (By.CLASS_NAME, 'fw-Header_Logout'))
