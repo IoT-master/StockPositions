@@ -8,7 +8,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 # TODO: Buildout FirefoxProfile
 # from selenium.webdriver import FirefoxProfile
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.common.exceptions import NoSuchElementException
 from pathlib import Path
 import os
 from abc import ABC

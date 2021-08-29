@@ -104,7 +104,7 @@ class AFCustomChrome(CustomChrome):
 
 if __name__ == '__main__':
 
-    with open(Path.cwd().joinpath('Confidential/confidential.json'), 'r') as confidential:
+    with open(Path('Confidential/confidential.json'), 'r') as confidential:
         confid_json = json.loads(confidential.read())
     af_account = confid_json['alight_financial']
 
