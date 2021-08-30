@@ -2,7 +2,6 @@ from Webscraper import CustomChrome
 from pathlib import Path
 import json
 from time import sleep
-from selenium.webdriver.common.by import By
 from pprint import pprint
 
 class FidelityChrome(CustomChrome):
