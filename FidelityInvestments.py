@@ -28,11 +28,11 @@ class FidelityChrome(CustomChrome):
         pass
 
     def update_investment_values(self, interval=10):
-        sleep(10)
-        self.wait_until_css_element_object_found(self.browser, '.account-selector--all-accounts-balance')
+        sleep(5)
+        self.wait_until_css_element_object_is_clickable(self.browser, '.account-selector--all-accounts-balance', 60)
         self.browser.find_element_by_css_selector('.account-selector--all-accounts-balance').click()
 
-        self.wait_until_class_name_element_object_found(self.browser, 'account-selector--tab-all')
+        self.wait_until_css_element_object_is_clickable(self.browser, '.account-selector--tab-all', 60)
         self.browser.find_element_by_class_name('account-selector--tab-all').click()
 
         account_view = {
@@ -41,9 +41,8 @@ class FidelityChrome(CustomChrome):
             'All Account Percentage:': 0
         }
         while True:
-            self.wait_until_class_name_element_object_found(self.browser, 'account-selector--tab-all')
+            self.wait_until_class_name_element_object_found(self.browser, 'account-selector--tab-all', 60)
             all_accounts = self.browser.find_element_by_class_name('account-selector--tab-all')
-            self.wait_until_class_name_element_object_found(self.browser, 'account-selector--tab-row', 60)
             account_view['All Account Value'] = self.browser.find_element_by_class_name('account-selector--tab-row').text
             account_view['All Account Change'] = all_accounts.get_attribute('data-today-change-value')
             account_view['All Account Percentage:'] = all_accounts.get_attribute('data-today-change-pct-value')
@@ -56,8 +55,8 @@ class FidelityChrome(CustomChrome):
             sleep(interval)
     
     def __exit__(self, *args):
-        self.wait_until_css_element_object_found(self.browser, '.pntlt .pnls.last-child a', 20)
-        self.browser.find_element_by_css_selector('.pntlt .pnls.last-child a').click()
+        self.wait_until_css_element_object_found(self.browser, '.pnlogin .pnls.last-child a')
+        self.browser.find_element_by_css_selector('.pnlogin .pnls.last-child a').click()
         super().__exit__(*args)
 
 if __name__ == '__main__':

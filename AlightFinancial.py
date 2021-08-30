@@ -126,5 +126,5 @@ if __name__ == '__main__':
         confid_json = json.loads(confidential.read())
     af_account = confid_json['alight_financial']
 
-    with AFCustomChrome(af_account, incognito=True, disable_extensions=True, headless=True) as alight_financial:
+    with AFCustomChrome(af_account, incognito=True, disable_extensions=True, headless=False) as alight_financial:
         alight_financial.update_investment_values()

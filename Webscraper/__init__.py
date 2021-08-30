@@ -77,6 +77,11 @@ class SeleniumAddons(ABC):
         wait = WebDriverWait(partial_dom, wait_time)
         wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_param)))
 
+    def wait_until_css_elements_object_found(self, partial_dom, css_param_list, wait_time=10):
+        wait = WebDriverWait(partial_dom, wait_time)
+        for css_param in css_param_list:
+            wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_param)))
+
     def wait_until_css_element_object_is_clickable(self, partial_dom, css_param, wait_time=10):
         wait = WebDriverWait(partial_dom, wait_time)
         wait.until(Clickable((By.CSS_SELECTOR, css_param)))
