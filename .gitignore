@@ -132,3 +132,4 @@ ChromeDrivers/*
 FirefoxDrivers/Windows/*
 Confidential/*
 !.gitkeep
+*.png
